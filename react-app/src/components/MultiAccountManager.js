@@ -62,6 +62,8 @@ export default function MultiAccountManager() {
     const updatedAccounts = [...(formData.multiAccounts || []), newEntry];
     const updatedForm = {
       ...formData,
+      username: updatedAccounts[0]?.username || newUsername.trim(),
+      password: updatedAccounts[0]?.password || newPassword.trim(),
       multiAccounts: updatedAccounts,
       multiTabEnabled: true,
     };
@@ -81,6 +83,8 @@ export default function MultiAccountManager() {
     const updatedAccounts = (formData.multiAccounts || []).filter((acc) => acc.id !== id);
     const updatedForm = {
       ...formData,
+      username: updatedAccounts[0]?.username || '',
+      password: updatedAccounts[0]?.password || '',
       multiAccounts: updatedAccounts,
     };
     setFormData(updatedForm);

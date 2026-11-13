@@ -24,10 +24,9 @@ const App = () => {
       <ScheduleBanner />
       <MultiAccountManager />
       
-      {/* Updated layout for Login+Timer, Train, and Payment Details */}
+      {/* Updated layout for Timer, Train, and Payment Details */}
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} mb={3} mt={isSmallScreen ? 6 : 0}>
         <Box flex={1} >
-          <LoginDetails />
           <TimerDetails />
         </Box>
         <Box flex={1}>

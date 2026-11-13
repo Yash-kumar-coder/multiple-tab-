@@ -32,7 +32,6 @@ function LoginDetails() {
         margin="normal"
         required
         variant="outlined"
-        placeholder="Enter Irctc username"
         slotProps={{
           input: {
             sx: sharedStyles.input, // Apply shared input styles
@@ -47,7 +46,6 @@ function LoginDetails() {
           value={formData.password}
           onChange={handleChange}
           name="password"
-          placeholder="Enter Irctc password"
           sx={{ width: '100%', backgroundColor: 'white', borderRadius: 1, '& .MuiOutlinedInput-root': { '& fieldset': { borderRadius: 1 } } }}
           endAdornment={
             <InputAdornment position="end">

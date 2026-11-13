@@ -1582,8 +1582,8 @@ async function getSettings() {
       const items = result[STORAGE_KEY] || defaultSettings;
       Logger.info('Settings loaded:', items);
       // Now 'items' will contain all the settings, either retrieved from storage or the defaults
-      username = items.username;
-      password = items.password;
+      username = items.username || (items.multiAccounts && items.multiAccounts[0]?.username) || '';
+      password = items.password || (items.multiAccounts && items.multiAccounts[0]?.password) || '';
       targetTime = items.targetTime;
       passengerList = items.passengerList;
       infantList = items.infantList || [];
