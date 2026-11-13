@@ -17,5 +17,12 @@
     "version:bump:minor": "npm version minor --no-git-tag-version && npm run version:sync",
     "version:bump:major": "npm version major --no-git-tag-version && npm run version:sync"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@mui/icons-material": "^6.1.5",
+    "@mui/material": "^6.5.0",
+    "@mui/system": "^6.5.0"
+  },
+  "dependencies": {
+    "puppeteer-core": "^25.17.0"
+  }
 }

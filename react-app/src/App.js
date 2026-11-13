@@ -13,6 +13,7 @@ import Header from './components/Header';
 import Footer from './components/Footer'; 
 import SelectorEditor from './components/SelectorEditor';
 import ScheduleBanner from './components/ScheduleBanner';
+import MultiAccountManager from './components/MultiAccountManager';
 
 
 const App = () => {
@@ -21,6 +22,7 @@ const App = () => {
     <Container maxWidth="lg" sx={{ mt: 7, pb: 8, pt: 2.5, boxShadow:2 }}>
       <Header />
       <ScheduleBanner />
+      <MultiAccountManager />
       
       {/* Updated layout for Login+Timer, Train, and Payment Details */}
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} mb={3} mt={isSmallScreen ? 6 : 0}>

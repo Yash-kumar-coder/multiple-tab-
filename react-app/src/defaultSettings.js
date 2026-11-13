@@ -31,7 +31,9 @@ const defaultSettings = {
     showInfant: false,
     autoSolveCaptcha:false,
     autoSubmitCaptcha:false,
-    autoProcessPopup:false
+    autoProcessPopup:false,
+    multiTabEnabled: false,
+    multiAccounts: []
   };
 
 export default defaultSettings;

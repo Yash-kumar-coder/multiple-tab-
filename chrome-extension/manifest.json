@@ -21,7 +21,8 @@
     "storage",
     "tabs",
     "alarms",
-    "notifications"
+    "notifications",
+    "system.display"
   ],
   "host_permissions": [
     "https://www.irctc.co.in/*",

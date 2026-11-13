@@ -94,3 +94,7 @@ dist
 v*.zip
 
 dist.zip
+.npm-cache
+.virtual_*
+chrome-extension/react-app
+

@@ -64,35 +64,39 @@ async function typeDate(element, mydate) {
   // Trigger blur event to simulate losing focus
   element.dispatchEvent(new Event('blur', { bubbles: true }));
 }
-async function selectQuota(element,value) {
+async function selectQuota(element, value) {
+  if (!value) return;
+  const targetQuota = value.trim().toUpperCase();
+  const dropdown = element || document.querySelector(JOURNEY_SELECTORS.JOURNEY_QUOTA);
+  if (!dropdown) return;
 
-   await element.click();
+  const currentText = dropdown.textContent ? dropdown.textContent.trim().toUpperCase() : '';
+  if (currentText.includes(targetQuota)) return;
 
-   // Simulate an onChange event to trigger the autocomplete options
-   var inputEvent = new Event('onChange', {
-     bubbles: true,
-     cancelable: true,
-   });
+  await dropdown.click();
+  const trigger = dropdown.querySelector('.p-dropdown-trigger, .ui-dropdown-trigger');
+  if (trigger) {
+    await trigger.click();
+  }
 
-   element.dispatchEvent(inputEvent);
+  dropdown.dispatchEvent(new Event('onChange', { bubbles: true, cancelable: true }));
+  await delay(400);
 
-   delay(500);
+  let listItems = document.querySelectorAll(JOURNEY_SELECTORS.JOURNEY_QUOTA_LIST);
+  if (!listItems || listItems.length === 0) {
+    listItems = document.querySelectorAll('.p-dropdown-items li, .ui-dropdown-items li, p-dropdownitem, [role="option"]');
+  }
 
-  // Get all list items within the autocomplete dropdown
-  var listItems = document.querySelectorAll(JOURNEY_SELECTORS.JOURNEY_QUOTA_LIST);
-
-  // Loop through each list item
-  for (let item of listItems) {
-    // Get the text content of the list item
-    const itemText = item.textContent.trim();
-
-    // Check if the text content contains the name substring (case-insensitive)
-    if (itemText.toLowerCase().includes(value.toLowerCase())) {
-      // Select the list item by simulating a click
-      item.click();
-      break;
+  if (listItems && listItems.length > 0) {
+    for (let item of listItems) {
+      const itemText = item.textContent.trim().toUpperCase();
+      if (itemText.includes(targetQuota)) {
+        await item.click();
+        break;
+      }
     }
   }
+  await delay(300);
 }
 // Function to fill Journey Details
 async function searchTrain(){

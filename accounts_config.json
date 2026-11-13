@@ -1,0 +1,46 @@
+{
+  "journeyDetails": {
+    "trainNumber": "12301",
+    "from": "NDLS",
+    "to": "CNB",
+    "dateString": "2026-11-20",
+    "quotaType": "GENERAL",
+    "accommodationClass": "3A",
+    "targetTime": "09:59:53",
+    "paymentType": "BHIM/UPI",
+    "paymentMethod": "BHIM/ UPI/ USSD",
+    "paymentProvider": "PAYTM",
+    "autoPay": true,
+    "autoSolveCaptcha": false,
+    "autoSubmitCaptcha": false
+  },
+  "passengers": [
+    {
+      "name": "RAHUL SHARMA",
+      "age": "28",
+      "gender": "Male",
+      "preference": "LB",
+      "isSelected": true
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Virtual Chrome 1",
+      "username": "user_one",
+      "password": "password1",
+      "enabled": true
+    },
+    {
+      "name": "Virtual Chrome 2",
+      "username": "user_two",
+      "password": "password2",
+      "enabled": true
+    },
+    {
+      "name": "Virtual Chrome 3",
+      "username": "user_three",
+      "password": "password3",
+      "enabled": true
+    }
+  ]
+}

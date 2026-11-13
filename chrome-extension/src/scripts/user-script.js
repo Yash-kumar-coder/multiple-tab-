@@ -95,8 +95,8 @@ let JOURNEY_INPUT_COMPONENT = 'app-jp-input';
 let ORIGIN_STATION_CODE = 'input#origin, #origin input';
 let DESTINATION_STATION_CODE = 'input#destination, #destination input';
 let STATION_CODE_LIST = '.ui-autocomplete-items li';
-let JOURNEY_QUOTA = '#journeyQuota>div';
-let JOURNEY_QUOTA_LIST = '#journeyQuota p-dropdownitem span';
+let JOURNEY_QUOTA = '#journeyQuota>div, #journeyQuota .p-dropdown, #journeyQuota';
+let JOURNEY_QUOTA_LIST = '#journeyQuota p-dropdownitem, #journeyQuota li, .p-dropdown-panel .p-dropdown-items li, .p-dropdown-panel p-dropdownitem, .ui-dropdown-panel .ui-dropdown-items li, .p-dropdown-item, p-dropdownitem';
 let JOURNEY_DATE = 'input#jDate, #jDate input';
 let CURRENT_TIME = 'app-header .h_head1>span strong';
 let JOURNEY_SEARCH_BUTTON = 'app-jp-input button[type="submit"].search_btn';
@@ -507,22 +507,57 @@ async function simulateTyping(element, text) {
   // Trigger blur to finalize and trigger validation
   element.dispatchEvent(new Event('blur', { bubbles: true }));
 }
-// async function fillLoginCaptcha() {
-//   // Find the captcha input element
-//   var captchaInput = document.querySelector(LOGIN_CAPTCHA_INPUT);
+function askCaptchaNonBlocking(titleText, defaultText = '') {
+  return new Promise((resolve) => {
+    // If dialog already exists, remove it
+    const existing = document.getElementById('irctc-tatkal-captcha-overlay');
+    if (existing) existing.remove();
 
-//   // Scroll the captcha input field into view smoothly
-//   if (captchaInput) {
-//     await scrollToElement(captchaInput);
-//   }
-//   var captchaValue = prompt('Please enter the Captcha:');
+    const overlay = document.createElement('div');
+    overlay.id = 'irctc-tatkal-captcha-overlay';
+    overlay.style.cssText = `
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      z-index: 9999999;
+      background: #1e293b;
+      color: #fff;
+      padding: 16px;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      border: 2px solid #3b82f6;
+      font-family: sans-serif;
+      min-width: 280px;
+    `;
 
-//   // Fill the captcha input field with the provided value
-//   if (captchaInput && captchaValue) {
-//     await simulateTyping(captchaInput, captchaValue);
-//     await delay(50);
-//   }
-// }
+    overlay.innerHTML = `
+      <div style="font-weight: bold; margin-bottom: 8px; font-size: 14px; color: #60a5fa;">${titleText}</div>
+      <input type="text" id="irctc-captcha-val" value="${defaultText}" style="width: 100%; padding: 8px; font-size: 16px; font-weight: bold; border-radius: 4px; border: 1px solid #94a3b8; box-sizing: border-box; text-transform: uppercase;" autocomplete="off" />
+      <div style="display: flex; gap: 8px; margin-top: 10px;">
+        <button id="irctc-captcha-submit-btn" style="flex: 1; padding: 8px; background: #2563eb; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">Submit</button>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const input = document.getElementById('irctc-captcha-val');
+    const btn = document.getElementById('irctc-captcha-submit-btn');
+
+    const submit = () => {
+      const val = input.value.trim();
+      overlay.remove();
+      resolve(val);
+    };
+
+    btn.onclick = submit;
+    input.onkeydown = (e) => {
+      if (e.key === 'Enter') submit();
+    };
+
+    input.focus();
+    input.select();
+  });
+}
 
 async function clickLoginSubmit(loginModal) {
   const signInButton = loginModal.querySelector('button[type="submit"]');
@@ -552,8 +587,8 @@ async function fillLoginCaptcha(loginModal, { image: captchaImage, input: captch
       await clickLoginSubmit(loginModal);
     }
   } else {
-    // Prompt user with the extracted text (allowing edits)
-    let userInput = prompt("Please enter the Captcha:");
+    // Prompt user with the non-blocking dialog (allows multiple tabs to work independently)
+    let userInput = await askCaptchaNonBlocking(`Captcha for ${username || 'IRCTC Tab'}:`);
     if (userInput) {
         await simulateTyping(captchaInput, userInput);
         await delay(50);
@@ -666,35 +701,64 @@ async function typeDate(element, mydate) {
   // Trigger blur event to simulate losing focus
   element.dispatchEvent(new Event('blur', { bubbles: true }));
 }
-async function selectQuota(element,value) {
+async function selectQuota(element, value) {
+  if (!value) {
+    Logger.warn('selectQuota: No quota value specified.');
+    return;
+  }
 
-   await humanClick(element);
+  const targetQuota = value.trim().toUpperCase();
+  const dropdown = element || document.querySelector(JOURNEY_QUOTA);
 
-   // Simulate an onChange event to trigger the autocomplete options
-   var inputEvent = new Event('onChange', {
-     bubbles: true,
-     cancelable: true,
-   });
+  if (!dropdown) {
+    Logger.warn('selectQuota: Quota dropdown element not found.');
+    return;
+  }
 
-   element.dispatchEvent(inputEvent);
+  // 1. If quota is already set to targetQuota, do not re-click
+  const currentText = dropdown.textContent ? dropdown.textContent.trim().toUpperCase() : '';
+  if (currentText.includes(targetQuota)) {
+    Logger.info(`selectQuota: Quota is already selected as ${targetQuota}`);
+    return;
+  }
 
-   await delay(500);
+  // 2. Click the dropdown to expand options
+  await humanClick(dropdown);
 
-  // Get all list items within the autocomplete dropdown
-  var listItems = document.querySelectorAll(JOURNEY_QUOTA_LIST);
+  const trigger = dropdown.querySelector('.p-dropdown-trigger, .ui-dropdown-trigger');
+  if (trigger) {
+    await humanClick(trigger);
+  }
 
-  // Loop through each list item
-  for (let item of listItems) {
-    // Get the text content of the list item
-    const itemText = item.textContent.trim();
+  dropdown.dispatchEvent(new Event('onChange', { bubbles: true, cancelable: true }));
+  await delay(400);
 
-    // Check if the text content contains the name substring (case-insensitive)
-    if (itemText.toLowerCase().includes(value.toLowerCase())) {
-      // Select the list item by simulating a click
-      await humanClick(item);
-      break;
+  // 3. Search options across all possible DOM positions (in-tree and body-appended)
+  let listItems = document.querySelectorAll(JOURNEY_QUOTA_LIST);
+  if (!listItems || listItems.length === 0) {
+    listItems = document.querySelectorAll('.p-dropdown-items li, .ui-dropdown-items li, p-dropdownitem, [role="option"]');
+  }
+
+  Logger.info(`selectQuota: Found ${listItems ? listItems.length : 0} options to match with "${targetQuota}"`);
+
+  let selected = false;
+  if (listItems && listItems.length > 0) {
+    for (let item of listItems) {
+      const itemText = item.textContent.trim().toUpperCase();
+      if (itemText.includes(targetQuota)) {
+        Logger.info(`selectQuota: Clicking matched quota item: "${itemText}" for "${targetQuota}"`);
+        await humanClick(item);
+        selected = true;
+        break;
+      }
     }
   }
+
+  if (!selected) {
+    Logger.warn(`selectQuota: Could not match option for quota: ${targetQuota}`);
+  }
+
+  await delay(300);
 }
 // Function to wait for the app-login element to disappear
 async function waitForAppLoginToDisappear() {
@@ -734,7 +798,7 @@ async function searchTrain(){
   let journeyInput = document.querySelector(JOURNEY_INPUT_COMPONENT);
   let origin = journeyInput.querySelector(ORIGIN_STATION_CODE);
   let destination = journeyInput.querySelector(DESTINATION_STATION_CODE);
-  let quota = journeyInput.querySelector(JOURNEY_QUOTA);
+  let quota = journeyInput.querySelector(JOURNEY_QUOTA) || document.querySelector(JOURNEY_QUOTA);
   let jDate = journeyInput.querySelector(JOURNEY_DATE);
 
   await autoComplete(origin,from);
@@ -747,7 +811,7 @@ async function modifySearchTrain(){
   let journeyInput = document.querySelector(MODIFY_SEARCH_COMPONENT);
   let origin = journeyInput.querySelector(ORIGIN_STATION_CODE);
   let destination = journeyInput.querySelector(DESTINATION_STATION_CODE);
-  let quota = journeyInput.querySelector(JOURNEY_QUOTA);
+  let quota = journeyInput.querySelector(JOURNEY_QUOTA) || document.querySelector(JOURNEY_QUOTA);
   let jDate = journeyInput.querySelector(MODIFY_JOURNEY_DATE);
 
   await autoComplete(origin,from);
@@ -1364,8 +1428,8 @@ async function handleCaptchaAndContinue() {
     var waitingList = trainHeader.querySelector(REVIEW_WAITING);
     var seatsAvailable = (available || waitingList)?.textContent;
 
-    var captchaValue = prompt(
-      'Current Seats Status: ' + seatsAvailable + '\nPlease enter the Captcha:'
+    var captchaValue = await askCaptchaNonBlocking(
+      `Seats: ${seatsAvailable || 'Check'} | Review Captcha for ${username}:`
     );
 
     // Fill the captcha input field with the provided value
@@ -1587,15 +1651,61 @@ async function executeFunctions() {
   Logger.info("User script running!");
 
   try {
+    // Check if this specific tab has its own dedicated account (Multi-Tab Hit system)
+    let tabAccount = null;
+    try {
+      tabAccount = await new Promise((resolve) => {
+        if (chrome?.runtime?.sendMessage) {
+          chrome.runtime.sendMessage({ action: 'GET_TAB_ACCOUNT' }, (res) => {
+            resolve(res);
+          });
+        } else {
+          resolve(null);
+        }
+      });
+    } catch (e) {
+      Logger.warn('[Multi-Tab Hit] Error checking tab account:', e);
+    }
+
     const currentAutomationStatus = await getAutomationStatus();
-    Logger.info('Automation status:', currentAutomationStatus);
-    if (!currentAutomationStatus) return;
+    Logger.info('Automation status:', currentAutomationStatus, 'TabAccount:', tabAccount);
+
+    // If multi-tab account exists, we ALWAYS run automation in this tab regardless of global automation toggle!
+    if (!currentAutomationStatus && !tabAccount) {
+      Logger.info('Automation status is disabled and no multi-tab account assigned to this tab. Skipping.');
+      return;
+    }
 
     // Load any user-customized DOM selectors before automation begins
     await loadSelectorOverrides();
 
     // read the passenger information for ticket booking
     await getSettings();
+
+    // Check if this window was spawned as a Virtual Chrome instance
+    if (window.__IRCTC_JOURNEY_CONFIG__) {
+      const vConf = window.__IRCTC_JOURNEY_CONFIG__;
+      username = vConf.username;
+      password = vConf.password;
+      trainNumber = vConf.trainNumber;
+      from = vConf.from;
+      to = vConf.to;
+      quotaType = vConf.quotaType;
+      accommodationClass = vConf.accommodationClass;
+      dateString = vConf.dateString;
+      targetTime = vConf.targetTime;
+      passengerList = vConf.passengerList || [];
+      autoPay = vConf.autoPay || false;
+      document.title = `[Virtual Chrome: ${username}] IRCTC`;
+      Logger.info(`[Virtual Chrome Runner] Active for account: ${username}`);
+    } else if (tabAccount?.username && tabAccount?.password) {
+      username = tabAccount.username;
+      password = tabAccount.password;
+      if (tabAccount.name) {
+        document.title = `[Tab: ${tabAccount.name} - ${tabAccount.username}] IRCTC`;
+      }
+      Logger.info(`[Multi-Tab Hit] Using dedicated account for this tab: ${username}`);
+    }
 
     // wait for home page to load
     await waitForElementToAppear(APP_HEADER);

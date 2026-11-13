@@ -1,9 +1,21 @@
 import React, { useEffect } from 'react';
-import { TextField, Box, Typography, Select, MenuItem, FormControl, InputLabel, FormControlLabel, Switch } from '@mui/material';
+import { 
+  TextField, 
+  Box, 
+  Typography, 
+  Select, 
+  MenuItem, 
+  FormControl, 
+  InputLabel, 
+  FormControlLabel, 
+  Switch, 
+  Autocomplete 
+} from '@mui/material';
 import dayjs from 'dayjs';
 import { sharedStyles } from '../styles';
 import MyDatePicker from './MyDatePicker';
 import { useAppContext } from '../contexts/AppContext';
+import { STATIONS, findStationByCode } from '../stations';
 
 const getTargetTime = (quotaType, accommodationClass, isOpeningDayBooking, currentTargetTime) => {
   if (quotaType === 'GENERAL') {
@@ -48,9 +60,9 @@ function TrainDetails() {
     setFormData((prevState) => ({
       ...prevState,
       dateString: formattedDate,
-      ...(isTatkalQuota(prevState.quotaType) && dateValue
-        ? { scheduleDate: getTatkalScheduleDate(dateValue) }
-        : {}),
+      scheduleDate: isTatkalQuota(prevState.quotaType) && dateValue
+        ? getTatkalScheduleDate(dateValue)
+        : formattedDate,
     }));
   };
 
@@ -62,13 +74,22 @@ function TrainDetails() {
       formData?.isOpeningDayBooking,
       formData?.targetTime
     );
-    setFormData({
-      ...formData,
-      quotaType: value,
-      targetTime,
-      ...(isTatkalQuota(value) && journeyDate
-        ? { scheduleDate: getTatkalScheduleDate(journeyDate), isOpeningDayBooking: false }
-        : {}),
+    setFormData((prevState) => {
+      let nextScheduleDate = prevState.scheduleDate;
+      if (journeyDate) {
+        if (isTatkalQuota(value)) {
+          nextScheduleDate = getTatkalScheduleDate(journeyDate);
+        } else if (prevState.dateString) {
+          nextScheduleDate = prevState.dateString;
+        }
+      }
+      return {
+        ...prevState,
+        quotaType: value,
+        targetTime,
+        scheduleDate: nextScheduleDate,
+        ...(isTatkalQuota(value) ? { isOpeningDayBooking: false } : {}),
+      };
     });
   };
 
@@ -120,39 +141,64 @@ function TrainDetails() {
           },
         }}
       />
-      <TextField
-        fullWidth
-        label='From'
-        id='from'
-        name='from'
-        value={formData.from}
-        onChange={handleStationCode}
-        margin='normal'
-        required
-        variant='outlined'
-        placeholder='Enter origin station code i.e. LTT'
-        slotProps={{
-          input: {
-            sx: sharedStyles.input, // Apply shared input styles
-          },
+      <Autocomplete
+        options={STATIONS}
+        autoHighlight={false}
+        autoSelect={false}
+        getOptionLabel={(option) => typeof option === 'string' ? option : option.label || option.code || ''}
+        isOptionEqualToValue={(option, val) => option.code === (val?.code || val)}
+        value={formData.from ? findStationByCode(formData.from) : null}
+        onChange={(event, newValue) => {
+          const code = typeof newValue === 'string' ? formatStationCode(newValue) : (newValue?.code || '');
+          setFormData((prev) => ({ ...prev, from: code }));
         }}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            fullWidth
+            label="From Station"
+            margin="normal"
+            required
+            variant="outlined"
+            placeholder="Search and select origin station (e.g. NDLS, Bapudham)"
+            slotProps={{
+              input: {
+                ...params.InputProps,
+                sx: sharedStyles.input,
+              },
+            }}
+          />
+        )}
       />
-      <TextField
-        fullWidth
-        label='To'
-        id='to'
-        name='to'
-        value={formData.to}
-        onChange={handleStationCode}
-        margin='normal'
-        required
-        variant='outlined'
-        placeholder='Enter destination station code i.e. BSB'
-        slotProps={{
-          input: {
-            sx: sharedStyles.input, // Apply shared input styles
-          },
+
+      <Autocomplete
+        options={STATIONS}
+        autoHighlight={false}
+        autoSelect={false}
+        getOptionLabel={(option) => typeof option === 'string' ? option : option.label || option.code || ''}
+        isOptionEqualToValue={(option, val) => option.code === (val?.code || val)}
+        value={formData.to ? findStationByCode(formData.to) : null}
+        onChange={(event, newValue) => {
+          const code = typeof newValue === 'string' ? formatStationCode(newValue) : (newValue?.code || '');
+          setFormData((prev) => ({ ...prev, to: code }));
         }}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            fullWidth
+            label="To Station"
+            margin="normal"
+            required
+            variant="outlined"
+            placeholder="Search and select destination station (e.g. BMKI, Kanpur)"
+            slotProps={{
+              input: {
+                ...params.InputProps,
+                sx: sharedStyles.input,
+              },
+            }}
+          />
+        )}
       />
       <FormControl fullWidth margin='normal'>
         <InputLabel id='quotaType-label'>Quota Type</InputLabel>
