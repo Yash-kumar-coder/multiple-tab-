@@ -6,7 +6,7 @@ const HowToUse = () => {
   return (
     <Box className="container mt-5">
       <Typography variant="h2" align="center" className="large font-weight-bold">
-        How to Use the Tatkal Ticket Booking Extension
+        How to Use the tatkal booking Extension
       </Typography>
       
       <Paper className="step-section mt-5 p-4">

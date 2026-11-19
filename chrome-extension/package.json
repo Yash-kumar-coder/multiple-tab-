@@ -1,7 +1,7 @@
 {
   "name": "@tatkal-ticket-booking/chrome-extension",
   "version": "6.3.2",
-  "description": "Tatkal Ticket Booking Chrome Extension",
+  "description": "tatkal booking Chrome Extension",
   "author": "Deepak Maurya",
   "license": "MIT",
   "scripts": {

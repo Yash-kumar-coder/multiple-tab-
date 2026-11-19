@@ -70,9 +70,9 @@ const Header = () => {
             alignItems='center'
             spacing={2}
           >
-            <LogoIcon />
-            <Typography variant='h5' fontWeight='bold'>
-              Tatkal Ticket Booking
+            {/* Logo removed - ready for your new PNG logo */}
+            <Typography variant='h5' fontWeight='bold' sx={{ textTransform: 'capitalize' }}>
+              tatkal booking
             </Typography>
             {!isSmallScreen && (
             <Stack
