@@ -95,8 +95,8 @@ let JOURNEY_INPUT_COMPONENT = 'app-jp-input';
 let ORIGIN_STATION_CODE = 'input#origin, #origin input';
 let DESTINATION_STATION_CODE = 'input#destination, #destination input';
 let STATION_CODE_LIST = '.ui-autocomplete-items li';
-let JOURNEY_QUOTA = '#journeyQuota>div, #journeyQuota .p-dropdown, #journeyQuota';
-let JOURNEY_QUOTA_LIST = '#journeyQuota p-dropdownitem, #journeyQuota li, .p-dropdown-panel .p-dropdown-items li, .p-dropdown-panel p-dropdownitem, .ui-dropdown-panel .ui-dropdown-items li, .p-dropdown-item, p-dropdownitem';
+let JOURNEY_QUOTA = '#journeyQuota .ui-dropdown, #journeyQuota>div, #journeyQuota .p-dropdown, #journeyQuota';
+let JOURNEY_QUOTA_LIST = '#journeyQuota li[role="option"], #journeyQuota li.ui-dropdown-item, #journeyQuota .ui-dropdown-items li, .p-dropdown-panel .p-dropdown-items li, .ui-dropdown-panel .ui-dropdown-items li';
 let JOURNEY_DATE = 'input#jDate, #jDate input';
 let CURRENT_TIME = 'app-header .h_head1>span strong';
 let JOURNEY_SEARCH_BUTTON = 'app-jp-input button[type="submit"].search_btn';
@@ -715,46 +715,51 @@ async function selectQuota(element, value) {
     return;
   }
 
-  // 1. If quota is already set to targetQuota, do not re-click
-  const currentText = dropdown.textContent ? dropdown.textContent.trim().toUpperCase() : '';
-  if (currentText.includes(targetQuota)) {
+  // 1. Check ONLY the selected label element (never dropdown.textContent, which includes all hidden options!)
+  const labelEl = dropdown.querySelector('.p-dropdown-label, .ui-dropdown-label');
+  const currentLabel = labelEl && labelEl.textContent ? labelEl.textContent.trim().toUpperCase() : '';
+  if (currentLabel && currentLabel === targetQuota) {
     Logger.info(`selectQuota: Quota is already selected as ${targetQuota}`);
     return;
   }
 
-  // 2. Click the dropdown to expand options
-  await humanClick(dropdown);
-
+  // 2. Click ONCE (prefer trigger icon if present, otherwise dropdown container) so we don't toggle it closed
   const trigger = dropdown.querySelector('.p-dropdown-trigger, .ui-dropdown-trigger');
-  if (trigger) {
-    await humanClick(trigger);
-  }
-
-  dropdown.dispatchEvent(new Event('onChange', { bubbles: true, cancelable: true }));
+  await humanClick(trigger || dropdown);
   await delay(400);
 
-  // 3. Search options across all possible DOM positions (in-tree and body-appended)
-  let listItems = document.querySelectorAll(JOURNEY_QUOTA_LIST);
-  if (!listItems || listItems.length === 0) {
-    listItems = document.querySelectorAll('.p-dropdown-items li, .ui-dropdown-items li, p-dropdownitem, [role="option"]');
-  }
-
-  Logger.info(`selectQuota: Found ${listItems ? listItems.length : 0} options to match with "${targetQuota}"`);
-
-  let selected = false;
-  if (listItems && listItems.length > 0) {
-    for (let item of listItems) {
-      const itemText = item.textContent.trim().toUpperCase();
-      if (itemText.includes(targetQuota)) {
-        Logger.info(`selectQuota: Clicking matched quota item: "${itemText}" for "${targetQuota}"`);
-        await humanClick(item);
-        selected = true;
-        break;
-      }
+  // 3. Search options strictly on clickable <li> option elements (never <p-dropdownitem> wrapper)
+  const getOptions = () => {
+    let items = document.querySelectorAll('#journeyQuota li[role="option"], #journeyQuota li.ui-dropdown-item');
+    if (!items || items.length === 0) {
+      items = document.querySelectorAll(JOURNEY_QUOTA_LIST);
     }
+    return Array.from(items || []);
+  };
+
+  let listItems = getOptions();
+  if (listItems.length === 0) {
+    // Fallback: click container once more in case trigger didn't open it
+    await humanClick(dropdown);
+    await delay(400);
+    listItems = getOptions();
   }
 
-  if (!selected) {
+  Logger.info(`selectQuota: Found ${listItems.length} options to match with "${targetQuota}"`);
+
+  // Prefer exact aria-label or exact text match first, then substring match
+  const matchedItem =
+    listItems.find((item) => (item.getAttribute('aria-label') || '').trim().toUpperCase() === targetQuota) ||
+    listItems.find((item) => item.textContent.trim().toUpperCase() === targetQuota) ||
+    listItems.find((item) => item.textContent.trim().toUpperCase().includes(targetQuota));
+
+  if (matchedItem) {
+    Logger.info(`selectQuota: Clicking matched quota <li>: "${matchedItem.textContent.trim()}"`);
+    if (typeof matchedItem.scrollIntoView === 'function') {
+      matchedItem.scrollIntoView({ block: 'nearest' });
+    }
+    await humanClick(matchedItem);
+  } else {
     Logger.warn(`selectQuota: Could not match option for quota: ${targetQuota}`);
   }
 

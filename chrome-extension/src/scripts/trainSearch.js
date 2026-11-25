@@ -70,31 +70,39 @@ async function selectQuota(element, value) {
   const dropdown = element || document.querySelector(JOURNEY_SELECTORS.JOURNEY_QUOTA);
   if (!dropdown) return;
 
-  const currentText = dropdown.textContent ? dropdown.textContent.trim().toUpperCase() : '';
-  if (currentText.includes(targetQuota)) return;
+  const labelEl = dropdown.querySelector('.p-dropdown-label, .ui-dropdown-label');
+  const currentLabel = labelEl && labelEl.textContent ? labelEl.textContent.trim().toUpperCase() : '';
+  if (currentLabel && currentLabel === targetQuota) return;
 
-  await dropdown.click();
   const trigger = dropdown.querySelector('.p-dropdown-trigger, .ui-dropdown-trigger');
-  if (trigger) {
-    await trigger.click();
-  }
-
-  dropdown.dispatchEvent(new Event('onChange', { bubbles: true, cancelable: true }));
+  await (trigger || dropdown).click();
   await delay(400);
 
-  let listItems = document.querySelectorAll(JOURNEY_SELECTORS.JOURNEY_QUOTA_LIST);
-  if (!listItems || listItems.length === 0) {
-    listItems = document.querySelectorAll('.p-dropdown-items li, .ui-dropdown-items li, p-dropdownitem, [role="option"]');
+  const getOptions = () => {
+    let items = document.querySelectorAll('#journeyQuota li[role="option"], #journeyQuota li.ui-dropdown-item');
+    if (!items || items.length === 0) {
+      items = document.querySelectorAll(JOURNEY_SELECTORS.JOURNEY_QUOTA_LIST);
+    }
+    return Array.from(items || []);
+  };
+
+  let listItems = getOptions();
+  if (listItems.length === 0) {
+    await dropdown.click();
+    await delay(400);
+    listItems = getOptions();
   }
 
-  if (listItems && listItems.length > 0) {
-    for (let item of listItems) {
-      const itemText = item.textContent.trim().toUpperCase();
-      if (itemText.includes(targetQuota)) {
-        await item.click();
-        break;
-      }
+  const matchedItem =
+    listItems.find((item) => (item.getAttribute('aria-label') || '').trim().toUpperCase() === targetQuota) ||
+    listItems.find((item) => item.textContent.trim().toUpperCase() === targetQuota) ||
+    listItems.find((item) => item.textContent.trim().toUpperCase().includes(targetQuota));
+
+  if (matchedItem) {
+    if (typeof matchedItem.scrollIntoView === 'function') {
+      matchedItem.scrollIntoView({ block: 'nearest' });
     }
+    await matchedItem.click();
   }
   await delay(300);
 }
