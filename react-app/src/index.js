@@ -7,18 +7,23 @@ import './styles.css';
 import { AppProvider } from './contexts/AppContext';
 import { ModalProvider } from './contexts/ModalContext';
 import theme from './theme';
+import { requireAuth } from './auth/AuthGate';
 
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <React.StrictMode>
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <ModalProvider>
-        <AppProvider>
-          <App />
-        </AppProvider>
-      </ModalProvider>
-    </ThemeProvider>
-  </React.StrictMode>
-);
+function startApp() {
+  const root = ReactDOM.createRoot(document.getElementById('root'));
+  root.render(
+    <React.StrictMode>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <ModalProvider>
+          <AppProvider>
+            <App />
+          </AppProvider>
+        </ModalProvider>
+      </ThemeProvider>
+    </React.StrictMode>
+  );
+}
+
+requireAuth(startApp);

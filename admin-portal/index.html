@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tatkal Booking - Admin Portal</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f1f5f9;
+      color: #0f172a;
+      min-height: 100vh;
+    }
+    .ap-center {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .ap-card {
+      width: 100%;
+      max-width: 400px;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      padding: 24px;
+    }
+    .ap-container {
+      max-width: 820px;
+      margin: 32px auto;
+      padding: 0 16px;
+    }
+    .ap-panel {
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      padding: 24px;
+    }
+    .ap-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .ap-title {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+    }
+    .ap-sub {
+      font-size: 13px;
+      color: #64748b;
+      margin-top: 4px;
+    }
+    .ap-field { margin-bottom: 14px; }
+    .ap-label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+    }
+    .ap-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    .ap-input:focus {
+      outline: none;
+      border-color: #1976d2;
+    }
+    .ap-btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      background: #1976d2;
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .ap-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .ap-btn-full { width: 100%; }
+    .ap-btn-sm { padding: 6px 12px; font-size: 12px; }
+    .ap-btn-secondary { background: #475569; }
+    .ap-btn-danger { background: #dc2626; }
+    .ap-btn-success { background: #16a34a; }
+    .ap-alert {
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-bottom: 14px;
+    }
+    .ap-alert-error { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+    .ap-alert-info { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .ap-form-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 14px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .ap-form-row .ap-input {
+      flex: 1;
+      min-width: 170px;
+    }
+    .ap-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .ap-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 12px 14px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #ffffff;
+    }
+    .ap-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+    .ap-badge-active { background: #dcfce7; color: #166534; }
+    .ap-badge-blocked { background: #fee2e2; color: #991b1b; }
+    .ap-actions { display: flex; gap: 8px; }
+    .ap-hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div id="loading-view" class="ap-center">
+    <div class="ap-card">
+      <h2 class="ap-title" style="text-align:center;">Loading Admin Portal...</h2>
+    </div>
+  </div>
+
+  <div id="login-view" class="ap-center ap-hidden">
+    <div class="ap-card">
+      <h2 class="ap-title" style="text-align:center; margin-bottom: 16px;">Admin Portal Login</h2>
+      <div id="login-error" class="ap-alert ap-alert-error ap-hidden"></div>
+      <form id="login-form">
+        <div class="ap-field">
+          <label class="ap-label" for="admin-email">Admin Email</label>
+          <input id="admin-email" class="ap-input" type="email" placeholder="Enter admin email" required />
+        </div>
+        <div class="ap-field">
+          <label class="ap-label" for="admin-password">Password</label>
+          <input id="admin-password" class="ap-input" type="password" placeholder="Enter password" required />
+        </div>
+        <button id="login-btn" class="ap-btn ap-btn-full" type="submit">Login</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="dashboard-view" class="ap-container ap-hidden">
+    <div class="ap-panel">
+      <div class="ap-header">
+        <div>
+          <h2 class="ap-title">Tatkal Booking — Admin Portal</h2>
+          <div id="admin-badge" class="ap-sub"></div>
+        </div>
+        <div class="ap-actions">
+          <button id="refresh-btn" class="ap-btn ap-btn-sm" type="button">Refresh</button>
+          <button id="logout-btn" class="ap-btn ap-btn-sm ap-btn-secondary" type="button">Logout</button>
+        </div>
+      </div>
+
+      <div id="dash-error" class="ap-alert ap-alert-error ap-hidden"></div>
+      <div id="dash-info" class="ap-alert ap-alert-info ap-hidden"></div>
+
+      <form id="create-user-form" class="ap-form-row">
+        <input id="new-username" class="ap-input" type="text" placeholder="Username (e.g. rahul)" required />
+        <input id="new-password" class="ap-input" type="password" placeholder="Password (min 6 chars)" required />
+        <button id="create-btn" class="ap-btn" type="submit">Create User</button>
+      </form>
+
+      <div id="users-list" class="ap-list"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+      signOut,
+      onAuthStateChanged,
+    } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      getDocs,
+      doc,
+      setDoc,
+      updateDoc,
+      deleteDoc,
+      serverTimestamp,
+    } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+    const ADMIN_EMAIL_HASH = "7d8be55522a7a3366c2d03b5ddc7ca7ea10123fc7037e73f238c5bc0bbeab505";
+    const USER_EMAIL_DOMAIN = "myext.app";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA-yEpAA2fol3AF5446a8tqwBNKV5jsI58",
+      authDomain: "tatkal-admin-bda05.firebaseapp.com",
+      projectId: "tatkal-admin-bda05",
+      storageBucket: "tatkal-admin-bda05.firebasestorage.app",
+      messagingSenderId: "356468278138",
+      appId: "1:356468278138:web:0fa1883c4cedc8cdf50cc3",
+      measurementId: "G-B1VCW9C5NJ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const loadingView = document.getElementById("loading-view");
+    const loginView = document.getElementById("login-view");
+    const dashboardView = document.getElementById("dashboard-view");
+    const loginForm = document.getElementById("login-form");
+    const loginError = document.getElementById("login-error");
+    const loginBtn = document.getElementById("login-btn");
+    const dashError = document.getElementById("dash-error");
+    const dashInfo = document.getElementById("dash-info");
+    const usersListEl = document.getElementById("users-list");
+    const adminBadge = document.getElementById("admin-badge");
+
+    function showAlert(el, msg) {
+      if (!msg) {
+        el.textContent = "";
+        el.classList.add("ap-hidden");
+      } else {
+        el.textContent = msg;
+        el.classList.remove("ap-hidden");
+      }
+    }
+
+    async function sha256Hex(text) {
+      const data = new TextEncoder().encode(text);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+      return Array.from(new Uint8Array(hashBuffer))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+    }
+
+    async function isAdmin(user) {
+      const clean = (user?.email || "").trim().toLowerCase();
+      if (!clean) return false;
+      return (await sha256Hex(clean)) === ADMIN_EMAIL_HASH;
+    }
+
+    function formatError(err) {
+      const code = err?.code || "";
+      if (code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found") {
+        return "Invalid email or password.";
+      }
+      if (code === "auth/email-already-in-use") {
+        return "This username already exists.";
+      }
+      if (code === "auth/weak-password") {
+        return "Password must be at least 6 characters.";
+      }
+      return err?.message || "Something went wrong.";
+    }
+
+    async function loadUsers() {
+      showAlert(dashError, "");
+      usersListEl.innerHTML = "<div style='color:#64748b;font-size:13px;'>Loading users...</div>";
+      try {
+        const snap = await getDocs(collection(db, "users"));
+        const users = [];
+        snap.forEach((d) => users.push({ uid: d.id, ...d.data() }));
+        users.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
+        if (users.length === 0) {
+          usersListEl.innerHTML = "<div style='color:#64748b;font-size:13px;'>No users created yet.</div>";
+          return;
+        }
+
+        usersListEl.innerHTML = "";
+        for (const u of users) {
+          const row = document.createElement("div");
+          row.className = "ap-row";
+
+          const left = document.createElement("div");
+          const nameEl = document.createElement("strong");
+          nameEl.textContent = u.username || u.uid;
+          const badge = document.createElement("span");
+          badge.className = `ap-badge ${u.active ? "ap-badge-active" : "ap-badge-blocked"}`;
+          badge.textContent = u.active ? "Active" : "Blocked";
+          left.appendChild(nameEl);
+          left.appendChild(badge);
+
+          const actions = document.createElement("div");
+          actions.className = "ap-actions";
+
+          const toggleBtn = document.createElement("button");
+          toggleBtn.type = "button";
+          toggleBtn.className = `ap-btn ap-btn-sm ${u.active ? "ap-btn-secondary" : "ap-btn-success"}`;
+          toggleBtn.textContent = u.active ? "Block" : "Activate";
+          toggleBtn.onclick = async () => {
+            showAlert(dashError, "");
+            showAlert(dashInfo, "");
+            try {
+              await updateDoc(doc(db, "users", u.uid), { active: !u.active });
+              await loadUsers();
+            } catch (err) {
+              showAlert(dashError, formatError(err));
+            }
+          };
+
+          const delBtn = document.createElement("button");
+          delBtn.type = "button";
+          delBtn.className = "ap-btn ap-btn-sm ap-btn-danger";
+          delBtn.textContent = "Delete";
+          delBtn.onclick = async () => {
+            showAlert(dashError, "");
+            showAlert(dashInfo, "");
+            try {
+              await deleteDoc(doc(db, "users", u.uid));
+              showAlert(dashInfo, `Deleted record for "${u.username || u.uid}".`);
+              await loadUsers();
+            } catch (err) {
+              showAlert(dashError, formatError(err));
+            }
+          };
+
+          actions.appendChild(toggleBtn);
+          actions.appendChild(delBtn);
+          row.appendChild(left);
+          row.appendChild(actions);
+          usersListEl.appendChild(row);
+        }
+      } catch (err) {
+        usersListEl.innerHTML = "";
+        showAlert(dashError, formatError(err));
+      }
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      loadingView.classList.add("ap-hidden");
+      if (!user) {
+        dashboardView.classList.add("ap-hidden");
+        loginView.classList.remove("ap-hidden");
+        return;
+      }
+      if (!(await isAdmin(user))) {
+        await signOut(auth).catch(() => {});
+        dashboardView.classList.add("ap-hidden");
+        loginView.classList.remove("ap-hidden");
+        showAlert(loginError, "Access denied: Only admin can use this portal.");
+        return;
+      }
+      loginView.classList.add("ap-hidden");
+      dashboardView.classList.remove("ap-hidden");
+      adminBadge.textContent = `Signed in as ${user.email}`;
+      await loadUsers();
+    });
+
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      showAlert(loginError, "");
+      const email = document.getElementById("admin-email").value.trim();
+      const password = document.getElementById("admin-password").value;
+
+      if ((await sha256Hex(email.toLowerCase())) !== ADMIN_EMAIL_HASH) {
+        showAlert(loginError, "Only the configured admin email can log in.");
+        return;
+      }
+
+      loginBtn.disabled = true;
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        document.getElementById("admin-password").value = "";
+      } catch (err) {
+        showAlert(loginError, formatError(err));
+      } finally {
+        loginBtn.disabled = false;
+      }
+    });
+
+    document.getElementById("create-user-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      showAlert(dashError, "");
+      showAlert(dashInfo, "");
+
+      const rawUser = document.getElementById("new-username").value.trim().toLowerCase();
+      const password = document.getElementById("new-password").value;
+      const createBtn = document.getElementById("create-btn");
+
+      if (!rawUser || rawUser.includes("@")) {
+        showAlert(dashError, "Enter a valid username (without @).");
+        return;
+      }
+      if (password.length < 6) {
+        showAlert(dashError, "Password must be at least 6 characters.");
+        return;
+      }
+
+      createBtn.disabled = true;
+      let secondaryApp = null;
+      try {
+        secondaryApp = initializeApp(firebaseConfig, `secondary-${Date.now()}`);
+        const secondaryAuth = getAuth(secondaryApp);
+        const email = `${rawUser}@${USER_EMAIL_DOMAIN}`;
+        const cred = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+
+        await setDoc(doc(db, "users", cred.user.uid), {
+          username: rawUser,
+          role: "user",
+          active: true,
+          createdAt: serverTimestamp(),
+        });
+
+        await signOut(secondaryAuth).catch(() => {});
+        document.getElementById("new-username").value = "";
+        document.getElementById("new-password").value = "";
+        showAlert(dashInfo, `User "${rawUser}" created.`);
+        await loadUsers();
+      } catch (err) {
+        showAlert(dashError, formatError(err));
+      } finally {
+        if (secondaryApp) {
+          await deleteApp(secondaryApp).catch(() => {});
+        }
+        createBtn.disabled = false;
+      }
+    });
+
+    document.getElementById("refresh-btn").addEventListener("click", loadUsers);
+    document.getElementById("logout-btn").addEventListener("click", async () => {
+      await signOut(auth).catch(() => {});
+    });
+  </script>
+</body>
+</html>
